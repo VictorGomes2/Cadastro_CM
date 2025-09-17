@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>CM REURB</title>
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        /* BASE STYLES */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* LOGIN CONTAINER */
+        #login-container {
+            background: white;
+            max-width: 400px;
+            margin: 4rem auto;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        #login-container img {
+            max-width: 150px;
+            margin-bottom: 1rem;
+        }
+
+        #login-container input {
+            width: 100%;
+            padding: 10px;
+            margin: 0.5rem 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        #login-container button {
+            width: 100%;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            font-size: 1rem;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-login { background-color: #007bff; color: white; }
+        .btn-reset { background-color: #dc3545; color: white; }
+        .btn-info { background-color: #ffc107; color: black; margin-top: 1rem; }
+
+        #login-erro { color: red; margin-top: 1rem; }
+
+        /* APP MAIN CONTAINER */
+        #app-container { display: none; }
+
+        /* HEADER */
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        header h1 { font-size: 1rem; margin: 0; }
+        #menu-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        #menu {
+            display: none;
+            position: absolute;
+            top: 60px;
+            right: 10px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            z-index: 1000;
+        }
+
+        #menu a {
+            display: block;
+            padding: 10px;
+            color: #333;
+            text-decoration: none;
+        }
+
+        #menu a:hover { background-color: #eee; }
+
+        /* CONTAINER AROUND TABS */
+        .container {
+            padding: 1rem;
+            max-width: 95% !important; /* ocupar quase toda a tela */
+            margin-left: 220px; /* respeita sidebar */
+        }
+
+        /* TAB CONTENT */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* SEARCH BOX */
+        .search-box {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 0.6rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .search-box button {
+            padding: 0.6rem 1rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* SEARCH RESULT */
+        #resultado-busca {
+            display: none;
+            background: #fff;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        #resultado-busca button.fechar {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #ccc;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* FLOATING BUTTON */
+        .floating-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: red;
+            color: white;
+            font-size: 2rem;
+            border: none;
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            cursor: pointer;
+            display: none; /* Hidden by default, shown when on 'cadastro' tab */
+        }
+
+        /* TABLE STYLES */
+        table {
+            width: 100%;
+            min-width: 1600px; /* garante largura maior */
+            border-collapse: collapse;
+            background-color: #fff;
+            margin-top: 1rem;
+        }
+
+        table th, table td {
+            padding: 14px;
+            border: 1px solid #ccc;
+            text-align: left;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        table th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        #lista-cadastros-wrapper {
+            overflow-x: auto;
+            width: 100%;
+            max-height: 600px;
+        }
+
+        /* NEW STYLES FOR MULTI-STEP FORM (WIZARD) */
+        #reurb-form-wizard {
+            display: none; /* Starts hidden, shown when '+' is clicked */
+            margin-top: 1rem;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            position: relative; /* For close button positioning */
+        }
+
+        .form-step {
+            display: none; /* Each step starts hidden */
+        }
+        .form-step.active {
+            display: block; /* Active step is shown */
+        }
+
+        .form-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+        }
+
+        .form-navigation button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .form-navigation button.prev {
+            background-color: #6c757d; /* Gray */
+            color: white;
+        }
+
+        .form-navigation button.next,
+        .form-navigation button.submit {
+            background-color: #28a745; /* Green */
+            color: white;
+        }
+
+        .form-navigation button.cancel {
+            background-color: #dc3545; /* Red */
+            color: white;
+        }
+
+        .progress-bar {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 1.5rem;
+            height: 10px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: #007bff;
+            border-radius: 5px;
+            width: 0%; /* Controlled via JS */
+            transition: width 0.4s ease-in-out;
+        }
+
+        .form-field {
+            margin-bottom: 1rem;
+        }
+
+        .form-field label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-field input[type="text"],
+        .form-field input[type="email"],
+        .form-field input[type="date"],
+        .form-field input[type="number"],
+        .form-field select,
+        .form-field textarea {
+            width: calc(100% - 22px); /* Adjust for padding and border */
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            color: #007bff;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+
+        .info-message {
+            background-color: #e6f7ff; /* Light blue */
+            border-left: 5px solid #007bff;
+            padding: 10px;
+            margin-bottom: 1rem;
+            color: #333;
+            font-size: 0.9em;
+        }
+    
+        /* Sidebar lateral com botões brancos */
+        .sidebar {
+            position: fixed;
+            top: 60px;         
+            left: 0;
+            width: 200px;
+            height: 100%;
+            background-color: #f9f9f9; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            border-right: 1px solid #ddd;
+            z-index: 900;
+            gap: 10px;
+        }
+
+        .sidebar a {
+            display: block;
+            width: 160px;
+            padding: 12px;
+            text-align: center;
+            background-color: #fff;  
+            color: #333;             
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar a:hover {
+            background-color: #f0f0f0;
+            border-color: #bbb;
+        }
+
+        /* --- ESTILOS RESTAURADOS PARA PLANTA GENÉRICA --- */
+        .planta-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ccc;
+        }
+        .planta-tab-button {
+            padding: 10px 15px;
+            border: none;
+            background-color: transparent;
+            cursor: pointer;
+            font-weight: bold;
+            transition: color 0.3s, border-bottom 0.3s;
+        }
+        .planta-tab-button.active {
+            color: #007bff;
+            border-bottom: 2px solid #007bff;
+        }
+        .planta-sub-aba {
+            display: none;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .planta-sub-aba.active {
+            display: block;
+        }
+        .planta-sub-aba form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .planta-sub-aba label,
+        .planta-sub-aba input,
+        .planta-sub-aba button {
+            margin-bottom: 10px;
+        }
+
+        /* --- NOVOS ESTILOS PARA O BOLETO DE IPTU --- */
+        #boleto-iptu {
+            display:none; 
+            background:#fff; 
+            padding:1rem;
+            border-radius:8px; 
+            box-shadow:0 0 5px rgba(0,0,0,0.2);
+            margin-top:1rem;
+            max-width: 800px; /* Largura máxima para o boleto */
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .print-btn {
+            margin-top:10px; 
+            padding:8px 16px; 
+            background:#28a745;
+            color:#fff; 
+            border:none; 
+            border-radius:4px; 
+            cursor:pointer;
+            font-size: 1rem;
+        }
+        
+        /* Estilos do boleto de IPTU */
+        .boleto-content {
+            width: 800px;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+            padding: 15px;
+            background: #fff;
+            border-radius: 6px;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+        }
+
+        .boleto-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .boleto-section h4 {
+            margin: 12px 0 6px 0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .boleto-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;   /* força largura fixa */
+        }
+
+        .boleto-table td {
+            border: 1px solid #ccc;
+            padding: 6px 8px;
+            vertical-align: top;
+            width: 50%;            /* garante metade pra cada */
+        }
+        
+        /************************************************************/
+        /* --- CORREÇÃO FINAL PARA O BOLETO --- */
+        #boleto-iptu table {
+            min-width: 100%; /* Reseta o min-width de 1600px herdado */
+            margin-top: 0;   /* Remove a margem superior herdada */
+        }
+        #boleto-iptu table td {
+            text-align: left; /* Garante alinhamento à esquerda dentro da célula */
+        }
+        /************************************************************/
+
+
+        .boleto-valor {
+            font-size: 22px;
+            font-weight: bold;
+            text-align: right;
+            border: 2px solid #000;
+            padding: 12px;
+            background-color: #f9f9f9;
+        }
+        .boleto-footer {
+            margin-top: 20px;
+            font-size: 12px;
+            text-align: center;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+            color: #666;
+        }
+        .print-btn-container {
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        /* --- ESTILOS PARA IMPRESSÃO --- */
+        @media print {
+            body * {
+                visibility: hidden; /* Esconde tudo */
+            }
+            #printable-area, #printable-area * {
+                visibility: visible; /* Mostra apenas a área de impressão */
+            }
+            #printable-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            .print-btn {
+                display: none; /* Esconde o botão de imprimir na impressão */
+            }
+        }
+        
+        /* --- INÍCIO: NOVOS ESTILOS PARA GERENCIAR USUÁRIOS --- */
+        #GerenciarLogin h2 {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+        #GerenciarLogin .btn-criar-usuario {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-bottom: 2rem;
+            display: inline-block;
+        }
+        #GerenciarLogin .btn-editar-usuario {
+            background-color: #ffc107;
+            color: #212529;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        #GerenciarLogin .btn-excluir-usuario {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #GerenciarLogin table {
+            min-width: initial; /* Reseta o min-width para esta tabela específica */
+            width: 100%;
+        }
+        #GerenciarLogin table th {
+           background-color: #0d6efd; /* Azul mais vivo para combinar com a imagem */
+        }
+         /* --- FIM: NOVOS ESTILOS PARA GERENCIAR USUÁRIOS --- */
+    </style>
+</head>
+<body>
+
+<div id="login-container">
+    <img src="Slogan.png" alt="Logo CM REURB">
+    <h2>Acesso ao sistema</h2>
+    <input type="text" id="usuario" placeholder="Usuário, E-mail ou CPF">
+    <input type="password" id="senha" placeholder="Senha">
+    <button class="btn-login" onclick="fazerLogin()">Entrar</button>
+    <button class="btn-reset">Redefinir senha</button>
+    <button class="btn-info">REURB Disponíveis</button>
+    <p id="login-erro"></p>
+</div>
+
+<div id="app-container">
+    <header>
+        <h1>CM REURB</h1>
+        <button id="menu-button">&#9776;</button>
+    </header>
+
+    <div class="sidebar">
+        <a href="#" onclick="mostrarAba('cadastro')">Consultar Cadastro Imobiliário</a>
+        <a href="#" onclick="mostrarAba('memorial')">Memorial Descritivo REURB</a>
+        <a href="#" onclick="mostrarAba('mapa')">Mapa Interativo</a>
+        <a href="#" onclick="mostrarAba('plantaGenerica')">Planta Genérica</a>
+        <a href="#" onclick="mostrarAba('GerarIPTU')">Gerar Guia IPTU</a>
+        <a href="#" onclick="mostrarAba('GerarGuiaREURB')">Gerar Guia REURB</a>
+        <a href="#" onclick="mostrarAba('GerarCRF')">Gerar CRF REURB</a>
+        <a href="#" onclick="mostrarAba('GerenciarLogin')">Gerenciar Login</a>
+        <a href="#" onclick="mostrarAba('Importar/Exportar')">Importar/Exportar</a>
+    </div>
+
+    <div id="menu">
+        <a href="#" onclick="mostrarAba('cadastro')">Consultar Cadastro Imobiliário</a>
+        <a href="#" onclick="mostrarAba('memorial')">Memorial Descritivo REURB</a>
+        <a href="#" onclick="mostrarAba('mapa')">Mapa Interativo</a>
+        <a href="#" onclick="mostrarAba('plantaGenerica')">Planta Genérica</a>
+        <a href="#" onclick="mostrarAba('GerarIPTU')">Gerar Guia IPTU</a>
+        <a href="#" onclick="mostrarAba('GerarGuiaREURB')">Gerar Guia REURB</a>
+        <a href="#" onclick="mostrarAba('GerarCRF')">Gerar CRF REURB</a>
+        <a href="#" onclick="mostrarAba('GerenciarLogin')">Gerenciar Login</a>
+        <a href="#" onclick="mostrarAba('Importar/Exportar')">Importar/Exportar</a>
+    </div>
+
+    <div class="container">
+        <div id="cadastro" class="tab-content">
+            <div class="search-box">
+                <input type="text" id="busca-nome" placeholder="Digite o nome para buscar..." />
+                <button onclick="buscarCadastro()">Buscar</button>
+            </div>
+            <div id="resultado-busca">
+                <button class="fechar" onclick="fecharResultado()">×</button>
+                <h3>Resultado</h3>
+                <p><strong>Nome:</strong> <span id="res-nome"></span></p>
+                <p><strong>CPF/CNPJ:</strong> <span id="res-cpfcnpj"></span></p>
+                <p><strong>Telefone:</strong> <span id="res-telefone"></span></p>
+            </div>
+
+            <div id="lista-cadastros-wrapper">
+                <table id="lista-cadastros">
+                    <thead>
+                        <tr>
+                            <th>Inscrição Imobiliária</th>
+                            <th>Nome</th>
+                            <th>CPF</th>
+                            <th>RG</th>
+                            <th>Telefone</th>
+                            <th>Email</th>
+                            <th>Endereço do Imóvel</th>
+                            <th>Área Total</th>
+                            <th>Área Construída</th>
+                            <th>Renda Familiar</th>
+                            <th>Tipo REURB</th>
+                            <th>VVT</th>
+                            <th>VVC</th>
+                            <th>VVI</th>
+                            <th>IPTU</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div id="reurb-form-wizard">
+                <button class="fechar" onclick="fecharFormularioWizard()" style="position: absolute; top: 15px; right: 15px; background: #eee; border-radius: 50%; width: 30px; height: 30px; font-weight: bold; cursor: pointer;">×</button>
+                <div class="progress-bar">
+                    <div class="progress-bar-fill" id="progress-fill"></div>
+                </div>
+
+                <form id="multi-step-form">
+                    <input type="hidden" id="edit_id" name="edit_id">
+
+                    <div class="form-step active" data-step="1">
+                        <h3 class="section-title">1. Informações do Requerente</h3>
+                        <div class="form-field">
+                            <label for="req_nome">Nome Completo:</label>
+                            <input type="text" id="req_nome" name="req_nome">
+                        </div>
+                        <div class="form-field">
+                            <label for="req_cpf">CPF:</label>
+                            <input type="text" id="req_cpf" name="req_cpf" placeholder="000.000.000-00">
+                        </div>
+                        <div class="form-field">
+                            <label for="req_rg">RG:</label>
+                            <input type="text" id="req_rg" name="req_rg">
+                        </div>
+                        <div class="form-field">
+                            <label for="req_data_nasc">Data de Nascimento:</label>
+                            <input type="date" id="req_data_nasc" name="req_data_nasc">
+                        </div>
+                        <div class="form-field">
+                            <label for="req_nacionalidade">Nacionalidade:</label>
+                            <input type="text" id="req_nacionalidade" name="req_nacionalidade" value="Brasileira">
+                        </div>
+                        <div class="form-field">
+                            <label for="req_estado_civil">Estado Civil:</label>
+                            <select id="req_estado_civil" name="req_estado_civil">
+                                <option value="">Selecione...</option>
+                                <option value="solteiro">Solteiro(a)</option>
+                                <option value="casado">Casado(a)</option>
+                                <option value="divorciado">Divorciado(a)</option>
+                                <option value="viuvo">Viúvo(a)</option>
+                                <option value="uniao_estavel">União Estável</option>
+                            </select>
+                        </div>
+                        <div id="conjuge_fields" style="display: none;">
+                            <div class="form-field">
+                                <label for="conj_nome">Nome Completo do Cônjuge:</label>
+                                <input type="text" id="conj_nome" name="conj_nome">
+                            </div>
+                            <div class="form-field">
+                                <label for="conj_cpf">CPF do Cônjuge:</label>
+                                <input type="text" id="conj_cpf" name="conj_cpf" placeholder="000.000.000-00">
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label for="req_profissao">Profissão:</label>
+                            <input type="text" id="req_profissao" name="req_profissao">
+                        </div>
+                        <div class="form-field">
+                            <label for="req_telefone">Telefone Principal:</label>
+                            <input type="text" id="req_telefone" name="req_telefone" placeholder="(XX) XXXXX-XXXX">
+                        </div>
+                        <div class="form-field">
+                            <label for="req_email">E-mail:</label>
+                            <input type="email" id="req_email" name="req_email">
+                        </div>
+                    </div>
+
+                    <div class="form-step" data-step="2">
+                        <h3 class="section-title">2. Informações do Imóvel</h3>
+                        <div class="form-field">
+                            <label for="imovel_cep">CEP do Imóvel:</label>
+                            <input type="text" id="imovel_cep" name="imovel_cep" placeholder="00000-000">
+                        </div>
+                        <div class="form-field">
+                            <label for="inscricao_imobiliaria">Inscrição Imobiliária:</label>
+                            <input type="text" id="inscricao_imobiliaria" name="inscricao_imobiliaria" placeholder="Ex: 01.01.012.0200.001">
+                        </div>
+                        <div class="form-field">
+                            <label for="imovel_logradouro">Logradouro:</label>
+                            <select id="imovel_logradouro" name="imovel_logradouro">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="confrontante_ld">Confrontante Lado Direito:</label>
+                            <input type="text" id="confrontante_ld" name="confrontante_ld">
+                        </div>
+                        <div class="form-field">
+                            <label for="confrontante_le">Confrontante Lado Esquerdo:</label>
+                            <input type="text" id="confrontante_le" name="confrontante_le">
+                        </div>
+                        <div class="form-field">
+                            <label for="confrontante_fundo">Confrontante Fundo:</label>
+                            <input type="text" id="confrontante_fundo" name="confrontante_fundo">
+                        </div>
+                        <div class="form-field">
+                            <label for="confrontante_frente">Confrontante Frente:</label>
+                            <input type="text" id="confrontante_frente" name="confrontante_frente" readonly>
+                        </div>
+                        <div class="form-field">
+                            <label for="imovel_numero">Número:</label>
+                            <input type="text" id="imovel_numero" name="imovel_numero">
+                        </div>
+                        <div class="form-field">
+                            <label for="imovel_complemento">Complemento:</label>
+                            <input type="text" id="imovel_complemento" name="imovel_complemento">
+                        </div>
+                        <div class="form-field">
+                            <label for="imovel_bairro">Bairro:</label>
+                            <input type="text" id="imovel_bairro" name="imovel_bairro">
+                        </div>
+                        <div class="form-field">
+                            <label for="imovel_cidade">Cidade:</label>
+                            <input type="text" id="imovel_cidade" name="imovel_cidade">
+                        </div>
+                        <div class="form-field">
+                            <label for="imovel_uf">Estado (UF):</label>
+                            <input type="text" id="imovel_uf" name="imovel_uf" maxlength="2">
+                        </div>
+                        <div class="form-field">
+                            <label for="imovel_area_total">Área Total do Lote (m²):</label>
+                            <input type="number" id="imovel_area_total" name="imovel_area_total" min="0" step="0.01">
+                        </div>
+                        <div class="form-field">
+                            <label for="imovel_area_construida">Área Construída (m²):</label>
+                            <input type="number" id="imovel_area_construida" name="imovel_area_construida" min="0" step="0.01">
+                        </div>
+                        <div class="form-field">
+                            <label for="imovel_uso">Uso Principal do Imóvel:</label>
+                            <select id="imovel_uso" name="imovel_uso">
+                                <option value="">Selecione...</option>
+                                <option value="residencial">Residencial</option>
+                                <option value="comercial">Comercial</option>
+                                <option value="misto">Misto</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="imovel_tipo_construcao">Padrão Construtivo:</label>
+                            <select id="imovel_tipo_construcao" name="imovel_tipo_construcao">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="tipo_imovel">Tipo do Imóvel (Alíquota):</label>
+                            <select id="tipo_imovel" name="tipo_imovel">
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="imovel_data_ocupacao">Data de Início da Ocupação:</label>
+                            <input type="date" id="imovel_data_ocupacao" name="imovel_data_ocupacao">
+                        </div>
+                    </div>
+
+                    <div class="form-step" data-step="3">
+                        <h3 class="section-title">3. Classificação e Enquadramento da REURB</h3>
+                        <div class="form-field">
+                            <label for="reurb_renda_familiar">Renda familiar mensal total (R$):</label>
+                            <input type="number" id="reurb_renda_familiar" name="reurb_renda_familiar" min="0" step="0.01">
+                            <p class="info-message">Este campo ajuda a classificar a REURB como Social (REURB-S) ou Específica (REURB-E).</p>
+                        </div>
+                        <div class="form-field">
+                            <label for="reurb_outro_imovel">O requerente possui outro imóvel?</label>
+                            <select id="reurb_outro_imovel" name="reurb_outro_imovel">
+                                <option value="">Selecione...</option>
+                                <option value="sim">Sim</option>
+                                <option value="nao">Não</option>
+                            </select>
+                            <p class="info-message">Este é um critério importante para o enquadramento em REURB-S.</p>
+                        </div>
+                        <div class="form-field">
+                            <label for="reurb_cadunico">Possui inscrição no CadÚnico?</label>
+                            <select id="reurb_cadunico" name="reurb_cadunico">
+                                <option value="">Selecione...</option>
+                                <option value="sim">Sim</option>
+                                <option value="nao">Não</option>
+                            </select>
+                        </div>
+                        <div class="info-message" id="reurb_sugestao_tipo" style="margin-top: 1.5rem;">
+                            <p><strong>Sugestão de Tipo de REURB:</strong> Será determinada com base nas suas respostas.</p>
+                        </div>
+                         <div class="form-field">
+                            <label for="reurb_propriedade">O imóvel é de propriedade particular ou pública?</label>
+                            <select id="reurb_propriedade" name="reurb_propriedade">
+                                <option value="">Selecione...</option>
+                                <option value="particular">Particular</option>
+                                <option value="publica">Pública</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-navigation">
+                        <button type="button" class="prev" onclick="changeStep(-1)">Anterior</button>
+                        <button type="button" class="next" onclick="changeStep(1)">Próximo</button>
+                        <button type="submit" class="submit" style="display: none;">Concluir Cadastro</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="memorial" class="tab-content"><p>Conteúdo do Memorial Descritivo</p></div>
+        
+        <div id="mapa" class="tab-content">
+             </div>
+
+        <div id="plantaGenerica" class="tab-content">
+            <h2>Planta Genérica</h2>
+            <div class="planta-tabs">
+                <button class="planta-tab-button" id="btn-padroes" onclick="mostrarSubAbaPlantaGenerica('padroes')">Padrão Construtivo</button>
+                <button class="planta-tab-button" id="btn-logradouros" onclick="mostrarSubAbaPlantaGenerica('logradouros')">VUP Terreno</button>
+                <button class="planta-tab-button" id="btn-aliquotas" onclick="mostrarSubAbaPlantaGenerica('aliquotas')">Alíquotas</button>
+            </div>
+            <div id="sub-aba-padroes" class="planta-sub-aba">
+                <h3>Cadastro de Padrão Construtivo</h3>
+                <form id="formPadraoConstrutivo">
+                    <label>Descrição:</label>
+                    <input type="text" name="descricao" required>
+                    <label>Valor do UFM(m²):</label>
+                    <input type="number" name="valor_m2" step="0.01" required>
+                    <button type="submit">Salvar Padrão</button>
+                </form>
+                <h4>Registros Salvos</h4>
+                <table id="tabela-padroes">
+                    <thead><tr></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div id="sub-aba-logradouros" class="planta-sub-aba">
+                <h3>Cadastro de VUP Terreno</h3>
+                <form id="formValorLogradouro">
+                    <label>Logradouro:</label>
+                    <input type="text" name="logradouro" required>
+                    <label>Valor do UFM(m²):</label>
+                    <input type="number" name="valor_m2" step="0.01" required>
+                    <button type="submit">Salvar Logradouro</button>
+                </form>
+                <h4>Registros Salvos</h4>
+                <table id="tabela-logradouros">
+                    <thead><tr></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div id="sub-aba-aliquotas" class="planta-sub-aba">
+                <h3>Cadastro de Alíquotas</h3>
+                <form id="formAliquotas">
+                    <label>Tipo:</label>
+                    <input type="text" name="tipo" required>
+                    <label>Alíquota (%):</label>
+                    <input type="number" name="aliquota" step="0.01" required>
+                    <button type="submit">Salvar Alíquota</button>
+                </form>
+                <h4>Registros Salvos</h4>
+                <table id="tabela-aliquotas">
+                    <thead><tr></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="GerarIPTU" class="tab-content">
+            <h2>Gerar IPTU</h2>
+            <div class="search-box">
+                <input type="text" id="busca-inscricao" placeholder="Digite a Inscrição Imobiliária..." />
+                <button onclick="buscarIPTU()">Buscar</button>
+            </div>
+            <div id="boleto-iptu">
+                </div>
+        </div>
+
+        <div id="GerenciarLogin" class="tab-content">
+            <h2>Gerenciar Usuários</h2>
+            <button class="btn-criar-usuario">+ Criar Novo Usuário</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Usuário</th>
+                        <th>Nível de Acesso</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Administrador Padrão</td>
+                        <td>admin</td>
+                        <td>Administrador</td>
+                        <td>
+                            <button class="btn-editar-usuario">✏️ Editar</button>
+                            <button class="btn-excluir-usuario">❌ Excluir</button>
+                        </td>
+                    </tr>
+                    </tbody>
+            </table>
+        </div>
+        </div>
+    <button class="floating-btn" onclick="iniciarNovoCadastroReurb()">+</button>
+</div>
+
+<script>
+    // Configurações de login
+    const usuarioCorreto = "admin";
+    const senhaCorreta = "123";
+
+    function fazerLogin() {
+        const usuario = document.getElementById("usuario").value;
+        const senha = document.getElementById("senha").value;
+
+        if (usuario === usuarioCorreto && senha === senhaCorreta) {
+            document.getElementById("login-container").style.display = "none";
+            document.getElementById("app-container").style.display = "block";
+            mostrarAba("cadastro");
+            carregarTodosCadastros();
+        } else {
+            document.getElementById("login-erro").innerText = "Usuário ou senha incorretos.";
+        }
+    }
+
+    // --- FUNÇÃO mostrarAba ATUALIZADA ---
+    function mostrarAba(abaId) {
+        document.querySelectorAll(".tab-content").forEach(div => div.classList.remove("active"));
+        
+        const abaAtiva = document.getElementById(abaId);
+        if(abaAtiva) {
+            abaAtiva.classList.add("active");
+        }
+        
+        const botao = document.querySelector(".floating-btn");
+        botao.style.display = (abaId === "cadastro") ? "block" : "none";
+        
+        if (abaId === "cadastro") {
+            fecharFormularioWizard(); // Garante que ao voltar pra aba, a lista seja exibida
+        } else if (abaId === "mapa") {
+            carregarMapaOSM(); // Carrega o mapa ao clicar na aba
+        } else if (abaId === "plantaGenerica") {
+            // Mostra a primeira sub-aba por padrão ao entrar na Planta Genérica
+            mostrarSubAbaPlantaGenerica('padroes');
+        }
+    }
+    
+    // --- FUNÇÃO RESTAURADA PARA O MAPA ---
+    function carregarMapaOSM() {
+        const mapaDiv = document.getElementById("mapa");
+        // Evita recarregar o mapa se ele já existir
+        if (mapaDiv.querySelector("iframe")) {
+            return;
+        }
+        mapaDiv.innerHTML = `
+            <iframe 
+                width="100%" 
+                height="600px" 
+                frameborder="0" 
+                scrolling="no" 
+                marginheight="0" 
+                marginwidth="0" 
+                src="https://www.openstreetmap.org/export/embed.html?bbox=-38.5,-13.1,-38.2,-12.9&layer=mapnik">
+            </iframe>
+            <br/>
+            <small>
+                <a href="https://www.openstreetmap.org/#map=14/-13.0/-38.35" target="_blank">Ver no OpenStreetMap</a>
+            </small>
+        `;
+    }
+
+    document.getElementById("menu-button").onclick = () => {
+        const menu = document.getElementById("menu");
+        menu.style.display = (menu.style.display === "block") ? "none" : "block";
+    };
+
+    function fecharResultado() {
+        document.getElementById("resultado-busca").style.display = "none";
+    }
+
+    function buscarCadastro() {
+        const termoBusca = document.getElementById("busca-nome").value.toLowerCase();
+        const tbody = document.querySelector("#lista-cadastros tbody");
+        const linhas = tbody.getElementsByTagName("tr");
+
+        for (const linha of linhas) {
+            const celulas = linha.getElementsByTagName("td");
+            let encontrado = false;
+
+            for (const celula of celulas) {
+                if (celula) {
+                    const textoCelula = celula.textContent || celula.innerText;
+                    if (textoCelula.toLowerCase().includes(termoBusca)) {
+                        encontrado = true;
+                        break;
+                    }
+                }
+            }
+            
+            linha.style.display = encontrado ? "" : "none";
+        }
+    }
+    
+    function carregarTodosCadastros() {
+        const COLSPAN_TOTAL = 16; 
+
+        fetch("http://127.0.0.1:5000/api/novo_cadastro_reurb/listar")
+            .then(res => {
+                if (!res.ok) throw new Error("Erro na rede ou servidor indisponível");
+                return res.json();
+            })
+            .then(data => {
+                const tbody = document.querySelector("#lista-cadastros tbody");
+                tbody.innerHTML = ""; 
+
+                if (data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="${COLSPAN_TOTAL}" style="text-align:center;">Nenhum cadastro encontrado.</td></tr>`;
+                    return;
+                }
+                
+                data.forEach(cad => {
+                    const tr = document.createElement("tr");
+
+                    const formatarMoeda = (valor) => {
+                        if (valor === null || valor === undefined || isNaN(valor)) {
+                            return 'N/A';
+                        }
+                        return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    };
+                    
+                    const vvtFormatado = formatarMoeda(cad.vvt);
+                    const vvcFormatado = formatarMoeda(cad.vvc);
+                    const vviFormatado = formatarMoeda(cad.vvi);
+                    const iptuFormatado = formatarMoeda(cad.iptu);
+                    
+                    tr.innerHTML = `
+                        <td>${cad.inscricao_imobiliaria || ""}</td>
+                        <td>${cad.nome || ""}</td>
+                        <td>${cad.cpf || ""}</td>
+                        <td>${cad.rg || ""}</td>
+                        <td>${cad.telefone || ""}</td>
+                        <td>${cad.email || ""}</td>
+                        <td>${cad.endereco || ""}</td>
+                        <td>${cad.area_total || ""}</td>
+                        <td>${cad.area_construida || ""}</td>
+                        <td>${cad.renda_familiar ? formatarMoeda(cad.renda_familiar) : ""}</td>
+                        <td>${cad.tipo_reurb || ""}</td>
+                        <td>${vvtFormatado}</td>
+                        <td>${vvcFormatado}</td>
+                        <td>${vviFormatado}</td>
+                        <td>${iptuFormatado}</td>
+                        <td style="white-space: nowrap;">
+                            <button onclick="editarCadastro('${cad.id}')" title="Editar" style="background:#ffc107;color:black;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;margin-right:4px;">✏️</button>
+                            <button onclick="excluirCadastro('${cad.id}')" title="Excluir" style="background:red;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;">❌</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(error => {
+                console.error("Erro ao carregar cadastros:", error);
+                const tbody = document.querySelector("#lista-cadastros tbody");
+                tbody.innerHTML = `<tr><td colspan="${COLSPAN_TOTAL}" style="text-align:center; color:red;">Erro ao carregar cadastros. Verifique o servidor.</td></tr>`;
+            });
+    }
+
+    /* --- FUNÇÕES PARA O FORMULÁRIO WIZARD DA REURB --- */
+    let currentStep = 1;
+    const totalSteps = document.querySelectorAll('.form-step').length;
+
+    async function popularSelects() {
+        try {
+            const [logradourosRes, padroesRes, aliquotasRes] = await Promise.all([
+                fetch("http://127.0.0.1:5000/api/planta_generica/logradouros"),
+                fetch("http://127.0.0.1:5000/api/planta_generica/padroes"),
+                fetch("http://127.0.0.1:5000/api/planta_generica/aliquotas")
+            ]);
+            const [logradouros, padroes, aliquotas] = await Promise.all([logradourosRes.json(), padroesRes.json(), aliquotasRes.json()]);
+            
+            const selLogradouro = document.getElementById("imovel_logradouro");
+            selLogradouro.innerHTML = '<option value="">Selecione...</option>';
+            logradouros.forEach(item => selLogradouro.innerHTML += `<option value="${item.logradouro}">${item.logradouro}</option>`);
+
+            const selPadrao = document.getElementById("imovel_tipo_construcao");
+            selPadrao.innerHTML = '<option value="">Selecione...</option>';
+            padroes.forEach(item => selPadrao.innerHTML += `<option value="${item.descricao}">${item.descricao}</option>`);
+
+            const selTipo = document.getElementById("tipo_imovel");
+            selTipo.innerHTML = '<option value="">Selecione...</option>';
+            aliquotas.forEach(item => selTipo.innerHTML += `<option value="${item.tipo}">${item.tipo}</option>`);
+
+        } catch (err) {
+            console.error("Erro ao carregar dados para os selects:", err);
+        }
+    }
+    
+    async function iniciarNovoCadastroReurb() {
+        document.getElementById("reurb-form-wizard").style.display = "block";
+        document.getElementById("lista-cadastros-wrapper").style.display = "none";
+        document.querySelector(".search-box").style.display = "none";
+        fecharResultado();
+        resetFormWizard();
+        updateFormWizard();
+        await popularSelects();
+    }
+
+    function fecharFormularioWizard() {
+        document.getElementById("reurb-form-wizard").style.display = "none";
+        document.getElementById("lista-cadastros-wrapper").style.display = "block";
+        document.querySelector("#cadastro .search-box").style.display = "flex";
+        resetFormWizard();
+        carregarTodosCadastros();
+    }
+
+    function resetFormWizard() {
+        currentStep = 1;
+        document.getElementById('multi-step-form').reset();
+        document.getElementById('edit_id').value = ''; 
+        document.getElementById('conjuge_fields').style.display = 'none';
+    }
+
+    function changeStep(direction) {
+        document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.remove('active');
+        currentStep += direction;
+        if (currentStep > totalSteps) currentStep = totalSteps;
+        if (currentStep < 1) currentStep = 1;
+        updateFormWizard();
+    }
+
+    function updateFormWizard() {
+        document.querySelectorAll('.form-step').forEach(step => step.classList.remove('active'));
+        document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.add('active');
+
+        document.querySelector('.form-navigation .prev').style.display = currentStep === 1 ? 'none' : 'block';
+        document.querySelector('.form-navigation .next').style.display = currentStep === totalSteps ? 'none' : 'block';
+        document.querySelector('.form-navigation .submit').style.display = currentStep === totalSteps ? 'block' : 'none';
+
+        const progressFill = document.getElementById('progress-fill');
+        progressFill.style.width = `${(currentStep / totalSteps) * 100}%`;
+        handleConditionalFields();
+    }
+    
+    function handleConditionalFields() {
+        const estadoCivil = document.getElementById('req_estado_civil').value;
+        document.getElementById('conjuge_fields').style.display = (estadoCivil === 'casado' || estadoCivil === 'uniao_estavel') ? 'block' : 'none';
+    }
+
+    document.getElementById('req_estado_civil').addEventListener('change', handleConditionalFields);
+    
+    async function editarCadastro(id) {
+        try {
+            const response = await fetch(`http://127.0.0.1:5000/api/novo_cadastro_reurb/${id}`);
+            if (!response.ok) throw new Error("Cadastro não encontrado ou erro no servidor.");
+            
+            const data = await response.json();
+
+            await iniciarNovoCadastroReurb(); 
+            
+            Object.keys(data).forEach(key => {
+                const field = document.getElementById(key);
+                if (field) {
+                    // Tratar campos de data que vêm do backend
+                    if(field.type === 'date' && data[key]) {
+                        field.value = data[key].split('T')[0]; // Pega apenas a parte da data
+                    } else {
+                         field.value = data[key] === null ? '' : data[key];
+                    }
+                }
+            });
+            
+            document.getElementById('edit_id').value = id;
+            handleConditionalFields();
+            
+        } catch (error) {
+            console.error("Erro ao carregar dados para edição:", error);
+            alert("Não foi possível carregar os dados do cadastro.");
+        }
+    }
+
+    document.getElementById('multi-step-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData.entries());
+        
+        const editId = data.edit_id;
+        
+        let url = "http://127.0.0.1:5000/api/novo_cadastro_reurb";
+        let method = "POST";
+
+        if (editId) {
+            url += `/${editId}`;
+            method = "PUT";
+        }
+        
+        fetch(url, {
+            method: method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(response => {
+            if (response.sucesso) {
+                alert(`Cadastro ${editId ? 'atualizado' : 'salvo'} com sucesso!`);
+                fecharFormularioWizard();
+            } else {
+                alert(`Erro ao salvar cadastro: ${response.erro}`);
+            }
+        })
+        .catch(error => {
+            console.error("Erro na requisição:", error);
+            alert("Ocorreu um erro ao tentar salvar o cadastro.");
+        });
+    });
+
+    function excluirCadastro(id) {
+        if (!confirm("Tem certeza que deseja excluir este cadastro?")) return;
+
+        fetch(`http://127.0.0.1:5000/api/novo_cadastro_reurb/${id}`, { method: "DELETE" })
+        .then(res => res.json())
+        .then(response => {
+            if (response.sucesso) {
+                alert("Cadastro excluído com sucesso.");
+                carregarTodosCadastros();
+            } else {
+                alert("Erro ao excluir cadastro: " + response.erro);
+            }
+        })
+        .catch(error => {
+            console.error("Erro ao excluir:", error);
+            alert("Erro ao tentar excluir o cadastro.");
+        });
+    }
+
+    // --- FUNÇÕES RESTAURADAS PARA PLANTA GENÉRICA ---
+    function mostrarSubAbaPlantaGenerica(tipo) {
+        document.querySelectorAll('.planta-tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.planta-sub-aba').forEach(aba => aba.style.display = 'none');
+        
+        document.getElementById(`btn-${tipo}`).classList.add('active');
+        document.getElementById(`sub-aba-${tipo}`).style.display = 'block';
+
+        carregarPlantaGenericaPorTipo(tipo);
+    }
+
+    async function enviarDadosPlantaGenerica(endpoint, data, tipoNome) {
+        try {
+            const resp = await fetch(`http://127.0.0.1:5000/api/planta_generica/${endpoint}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
+            const response = await resp.json();
+            if (response.sucesso) {
+                alert(`${tipoNome} cadastrado com sucesso!`);
+                document.getElementById(`form${tipoNome.replace(/\s/g, '')}`).reset();
+                carregarPlantaGenericaPorTipo(endpoint);
+            } else {
+                alert(`Erro ao cadastrar ${tipoNome}: ${response.erro}`);
+            }
+        } catch (err) {
+            alert(`Erro na requisição: ${err}`);
+        }
+    }
+
+    async function carregarPlantaGenericaPorTipo(tipo) {
+        try {
+            const resp = await fetch(`http://127.0.0.1:5000/api/planta_generica/${tipo}`);
+            const data = await resp.json();
+            const tbody = document.querySelector(`#tabela-${tipo} tbody`);
+            const thead = document.querySelector(`#tabela-${tipo} thead tr`);
+
+            tbody.innerHTML = '';
+            
+            if (tipo === 'padroes') {
+                thead.innerHTML = '<th>ID</th><th>Descrição</th><th>Valor m²</th><th>Ações</th>';
+                data.forEach(item => {
+                    tbody.innerHTML += `<tr><td>${item.id}</td><td>${item.descricao}</td><td>${item.valor_m2}</td><td><button onclick="excluirItemPlantaGen('${tipo}', ${item.id})">❌</button></td></tr>`;
+                });
+            } else if (tipo === 'logradouros') {
+                thead.innerHTML = '<th>ID</th><th>Logradouro</th><th>Valor m²</th><th>Ações</th>';
+                data.forEach(item => {
+                    tbody.innerHTML += `<tr><td>${item.id}</td><td>${item.logradouro}</td><td>${item.valor_m2}</td><td><button onclick="excluirItemPlantaGen('${tipo}', ${item.id})">❌</button></td></tr>`;
+                });
+            } else if (tipo === 'aliquotas') {
+                thead.innerHTML = '<th>ID</th><th>Tipo</th><th>Alíquota %</th><th>Ações</th>';
+                data.forEach(item => {
+                    tbody.innerHTML += `<tr><td>${item.id}</td><td>${item.tipo}</td><td>${item.aliquota}</td><td><button onclick="excluirItemPlantaGen('${tipo}', ${item.id})">❌</button></td></tr>`;
+                });
+            }
+        } catch (err) {
+            console.error(`Erro ao carregar dados de ${tipo}:`, err);
+        }
+    }
+    
+    function excluirItemPlantaGen(tipo, id) {
+        if (!confirm("Tem certeza que deseja excluir este item?")) return;
+        fetch(`http://127.0.0.1:5000/api/planta_generica/${tipo}/${id}`, {
+            method: "DELETE"
+        })
+        .then(res => res.json())
+        .then(response => {
+            if (response.sucesso) {
+                alert("Registro excluído com sucesso.");
+                carregarPlantaGenericaPorTipo(tipo);
+            } else {
+                alert("Erro ao excluir: " + response.erro);
+            }
+        })
+        .catch(error => {
+            console.error("Erro ao excluir:", error);
+            alert("Erro ao tentar excluir o registro.");
+        });
+    }
+    
+    // ===================================================================
+    // ================== FUNÇÃO buscarIPTU CORRIGIDA ====================
+    // ===================================================================
+    async function buscarIPTU() {
+        const termo = document.getElementById("busca-inscricao").value.trim();
+        if (!termo) {
+            alert("Digite a inscrição imobiliária.");
+            document.getElementById("boleto-iptu").style.display = "none";
+            return;
+        }
+
+        try {
+            const resLista = await fetch("http://127.0.0.1:5000/api/novo_cadastro_reurb/listar");
+            const lista = await resLista.json();
+            const cadastroResumo = lista.find(c => c.inscricao_imobiliaria === termo);
+
+            if (!cadastroResumo) {
+                alert("Inscrição não encontrada.");
+                document.getElementById("boleto-iptu").style.display = "none";
+                return;
+            }
+
+            const resDetalhe = await fetch(`http://127.0.0.1:5000/api/novo_cadastro_reurb/${cadastroResumo.id}`);
+            const cad = await resDetalhe.json();
+
+            const iptuFormatado = (cadastroResumo.iptu || 0).toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            });
+            
+            // Função para formatar a data para dd/mm/yyyy
+            const formatarData = (dataString) => {
+                if (!dataString) return '';
+                // As datas do formulário tipo 'date' podem vir sem fuso horário.
+                // Criar a data como UTC para evitar que o fuso horário local a altere.
+                const data = new Date(dataString + 'T00:00:00Z');
+                return data.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+            };
+
+            const boletoHTML = `
+            <div id="printable-area" class="boleto-content">
+                <div class="boleto-header">
+                    <div><strong>Prefeitura Municipal</strong><br>Departamento de Tributos</div>
+                    <div style="text-align:right;">
+                        <div style="font-size:16px; font-weight:bold;">IPTU - ${new Date().getFullYear()}</div>
+                        <div style="font-size:11px;">Documento de Arrecadação</div>
+                    </div>
+                </div>
+
+                <div class="boleto-section">
+                    <h4>Dados do Contribuinte</h4>
+                    <table class="boleto-table">
+                        <tbody>
+                            <tr>
+                                <td><strong>Nome:</strong> ${cad.req_nome || ""}</td>
+                                <td><strong>CPF:</strong> ${cad.req_cpf || ""}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><strong>Endereço:</strong> ${cad.imovel_logradouro || ""}, ${cad.imovel_numero || ""} - ${cad.imovel_bairro || ""}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="boleto-section">
+                     <h4>Dados do Imóvel</h4>
+                    <table class="boleto-table">
+                        <tbody>
+                            <tr>
+                                <td><strong>Inscrição:</strong> ${cad.inscricao_imobiliaria || ""}</td>
+                                <td><strong>Uso:</strong> ${cad.imovel_uso || "terreno sem Construção"}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Área do Lote:</strong> ${(cad.imovel_area_total || 0).toLocaleString('pt-BR')} m²</td>
+                                <td><strong>Área Construída:</strong> ${(cad.imovel_area_construida || 0).toLocaleString('pt-BR')} m²</td>
+                            </tr>
+                             <tr>
+                                <td colspan="2"><strong>Data de Ocupação:</strong> ${formatarData(cad.imovel_data_ocupacao)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="boleto-section">
+                    <h4>Valor do Tributo</h4>
+                    <div class="boleto-valor">${iptuFormatado}</div>
+                </div>
+                
+                <div class="boleto-footer">
+                    Este é um boleto de simulação. Para fins oficiais, utilize a versão validada pela Prefeitura.
+                </div>
+
+                <div class="print-btn-container">
+                    <button class="print-btn" onclick="window.print()">🖨️ Imprimir</button>
+                </div>
+            </div>`;
+
+            const boletoDiv = document.getElementById("boleto-iptu");
+            boletoDiv.innerHTML = boletoHTML;
+            boletoDiv.style.display = "block";
+
+        } catch (err) {
+            console.error("Erro ao buscar dados do IPTU:", err);
+            alert("Ocorreu um erro ao buscar os dados do IPTU. Verifique a console para mais detalhes.");
+        }
+    }
+
+
+    // Event Listeners para os formulários da Planta Genérica
+    document.getElementById('formPadraoConstrutivo').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const data = {
+            descricao: this.descricao.value,
+            valor_m2: parseFloat(this.valor_m2.value)
+        };
+        enviarDadosPlantaGenerica('padroes', data, 'Padrão Construtivo');
+    });
+
+    document.getElementById('formValorLogradouro').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const data = {
+            logradouro: this.logradouro.value,
+            valor_m2: parseFloat(this.valor_m2.value)
+        };
+        enviarDadosPlantaGenerica('logradouros', data, 'VUP Terreno');
+    });
+
+    document.getElementById('formAliquotas').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const data = {
+            tipo: this.tipo.value,
+            aliquota: parseFloat(this.aliquota.value)
+        };
+        enviarDadosPlantaGenerica('aliquotas', data, 'Alíquota');
+    });
+
+    document.getElementById('imovel_logradouro').addEventListener('change', function() {
+        const logradouroSelecionado = this.value;
+        document.getElementById('confrontante_frente').value = logradouroSelecionado;
+    });
+
+    // Inicialização da página
+    document.addEventListener("DOMContentLoaded", () => {
+        // A chamada inicial para carregar cadastros ocorre após o login bem-sucedido
+    });
+</script>
+
+</body>
+</html>
